@@ -1,14 +1,12 @@
 import { PropsWithChildren } from 'react';
 
-import { Box, Button, ButtonProps, Flex, Text } from '@chakra-ui/react';
+import { Box, Flex } from '@chakra-ui/react';
 
 import { useDarkMode } from 'lib/hooks/useDarkMode';
 
-type Props = {
-  buttonName?: string;
-} & ButtonProps;
+type Props = {};
 
-export function TopBar({ children, buttonName, ...buttonProps }: PropsWithChildren<Props>): JSX.Element {
+export function TopBar({ children }: PropsWithChildren<Props>): JSX.Element {
   const mode = useDarkMode();
 
   return (
@@ -22,14 +20,7 @@ export function TopBar({ children, buttonName, ...buttonProps }: PropsWithChildr
       borderBottomStyle="solid"
     >
       <Flex justifyContent="space-between" alignItems="center" p="3">
-        {typeof children === 'string' ? <Text>{children}</Text> : { children }}
-        {buttonName && (
-          <Box>
-            <Button size="xs" {...buttonProps}>
-              {buttonName}
-            </Button>
-          </Box>
-        )}
+        {children}
       </Flex>
     </Box>
   );

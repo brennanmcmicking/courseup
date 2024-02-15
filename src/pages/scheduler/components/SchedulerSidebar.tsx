@@ -1,6 +1,7 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
-import { Box, VStack } from '@chakra-ui/layout';
+import { Box, Flex, VStack } from '@chakra-ui/layout';
+import { Button } from '@chakra-ui/react';
 import { Collapse } from '@chakra-ui/transition';
 
 import { MeetingTimes } from 'lib/fetchers';
@@ -8,9 +9,11 @@ import { useSavedCourses } from 'lib/hooks/useSavedCourses';
 
 import { TopBar } from 'common/layouts/sidebar/components/TopBar';
 
+import { FlattenedSection, generateValidSchedules } from '../hooks/generateValidSchedules';
 import { useGetCourseSections } from '../hooks/useCalendarEvents';
 
 import { CourseCard } from './CourseCard';
+import { GeneratorModal } from './GeneratorModal';
 import { SectionsCardContainer } from './SchedulerSections';
 
 // GREEN, RED, YELLOW, BLUE, PURPLE, ORANGE
@@ -23,6 +26,9 @@ interface SchedulerSidebarProps {
 export function SchedulerSidebar({ term }: SchedulerSidebarProps): JSX.Element {
   const { deleteCourse, setSection, setShowSections, courses, setSelected, clearCourses } = useSavedCourses();
   const coursesResult = useGetCourseSections(term, courses);
+  const [showGenerator, setShowGenerator] = useState(false);
+  const [generatedSchedules, setGeneratedSchedules] = useState<FlattenedSection[][]>([]);
+  const noCoursesSelected = courses.filter((course) => course.term === term).length === 0;
 
   const handleCourseSectionChange = useCallback(
     (
@@ -111,15 +117,49 @@ export function SchedulerSidebar({ term }: SchedulerSidebarProps): JSX.Element {
     [setShowSections]
   );
 
+  const addGeneratedSchedule = (schedule: FlattenedSection[]) => {
+    setGeneratedSchedules([...generatedSchedules, schedule]);
+  };
+
+  const activateGenerator = () => {
+    if (coursesResult.status === 'loaded') {
+      setShowGenerator(true);
+
+      generateValidSchedules({ reportValidSchedule: addGeneratedSchedule, courses: coursesResult.data });
+    }
+  };
+
   return (
     <>
-      <TopBar
-        colorScheme="red"
-        onClick={() => clearCourses(term)}
-        disabled={courses.filter((course) => course.term === term).length === 0}
-        buttonName="Clear"
-      >
+      <TopBar>
         Saved Courses
+        <Flex justifyContent="flex-end" gap={2}>
+          {coursesResult.status === 'loaded' && (
+            <>
+              <Button size="xs" colorScheme="blue" disabled={noCoursesSelected} onClick={activateGenerator}>
+                Generate
+              </Button>
+              <GeneratorModal
+                term={term}
+                isOpen={showGenerator}
+                closeHook={() => {
+                  setShowGenerator(false);
+                }}
+                updateHook={(newSectionList: FlattenedSection[]) => {
+                  // do something then hide the modal
+                  newSectionList.forEach((section) => {
+                    setSection(section.sectionType, section, section.course);
+                  });
+                  setShowGenerator(false);
+                }}
+                schedules={generatedSchedules}
+              />
+            </>
+          )}
+          <Button size="xs" colorScheme="red" disabled={noCoursesSelected} onClick={() => clearCourses(term)}>
+            Clear
+          </Button>
+        </Flex>
       </TopBar>
       <Box h="100%" pb="20" overflowY="auto">
         {coursesResult.status === 'loaded' &&
@@ -150,7 +190,10 @@ export function SchedulerSidebar({ term }: SchedulerSidebarProps): JSX.Element {
                     course={course}
                     courses={courses}
                     sections={course.sections}
-                    handleChange={handleCourseSectionChange}
+                    handleChange={(sectionType, sectionCode, meetingTime, code, subject, pid, term) => {
+                      console.log('handleChange called');
+                      handleCourseSectionChange(sectionType, sectionCode, meetingTime, code, subject, pid, term);
+                    }}
                   />
                 </Collapse>
               </VStack>
