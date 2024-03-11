@@ -9,7 +9,7 @@ import { useSavedCourses } from 'lib/hooks/useSavedCourses';
 
 import { TopBar } from 'common/layouts/sidebar/components/TopBar';
 
-import { FlattenedSection, generateValidSchedules } from '../hooks/generateValidSchedules';
+import { FlattenedSchedule, generateValidSchedules } from '../hooks/generateValidSchedules';
 import { useGetCourseSections } from '../hooks/useCalendarEvents';
 
 import { CourseCard } from './CourseCard';
@@ -27,7 +27,7 @@ export function SchedulerSidebar({ term }: SchedulerSidebarProps): JSX.Element {
   const { deleteCourse, setSection, setShowSections, courses, setSelected, clearCourses } = useSavedCourses();
   const coursesResult = useGetCourseSections(term, courses);
   const [showGenerator, setShowGenerator] = useState(false);
-  const [generatedSchedules, setGeneratedSchedules] = useState<FlattenedSection[][]>([]);
+  const [generatedSchedulesState, setGeneratedSchedulesState] = useState<FlattenedSchedule[]>([]);
   const noCoursesSelected = courses.filter((course) => course.term === term).length === 0;
 
   const handleCourseSectionChange = useCallback(
@@ -117,15 +117,21 @@ export function SchedulerSidebar({ term }: SchedulerSidebarProps): JSX.Element {
     [setShowSections]
   );
 
-  const addGeneratedSchedule = (schedule: FlattenedSection[]) => {
-    setGeneratedSchedules([...generatedSchedules, schedule]);
+  const addGeneratedSchedule = (schedules: FlattenedSchedule[]) => {
+    // if (generatedSchedules.length < 100) {
+    // console.log(`addGeneratedSchedule called, pre-update length: ${generatedSchedules.length}`);
+    // generatedSchedules.push(schedule);
+    // console.log(`post-update length: ${generatedSchedules.length}`);
+    setGeneratedSchedulesState(schedules);
+    // console.log(generatedSchedulesState.length);
+    // }
   };
 
   const activateGenerator = () => {
     if (coursesResult.status === 'loaded') {
+      setGeneratedSchedulesState([]);
+      generateValidSchedules({ reportValidSchedules: addGeneratedSchedule, courses: coursesResult.data });
       setShowGenerator(true);
-
-      generateValidSchedules({ reportValidSchedule: addGeneratedSchedule, courses: coursesResult.data });
     }
   };
 
@@ -145,14 +151,14 @@ export function SchedulerSidebar({ term }: SchedulerSidebarProps): JSX.Element {
                 closeHook={() => {
                   setShowGenerator(false);
                 }}
-                updateHook={(newSectionList: FlattenedSection[]) => {
+                updateHook={(newSectionList: FlattenedSchedule) => {
                   // do something then hide the modal
-                  newSectionList.forEach((section) => {
-                    setSection(section.sectionType, section, section.course);
-                  });
-                  setShowGenerator(false);
+                  // newSectionList.forEach((section) => {
+                  //   setSection(section.sectionType, section, section.course);
+                  // });
+                  // setShowGenerator(false);
                 }}
-                schedules={generatedSchedules}
+                schedules={generatedSchedulesState}
               />
             </>
           )}
@@ -191,7 +197,7 @@ export function SchedulerSidebar({ term }: SchedulerSidebarProps): JSX.Element {
                     courses={courses}
                     sections={course.sections}
                     handleChange={(sectionType, sectionCode, meetingTime, code, subject, pid, term) => {
-                      console.log('handleChange called');
+                      // console.log('handleChange called');
                       handleCourseSectionChange(sectionType, sectionCode, meetingTime, code, subject, pid, term);
                     }}
                   />

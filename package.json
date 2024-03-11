@@ -28,11 +28,14 @@
     "react-router": "^6.0.0-beta.0",
     "react-router-dom": "^6.0.0-beta.0",
     "react-scripts": "5.0.0",
+    "react-use-websocket": "^2.9.1",
+    "react-use-websockets": "^2.2.4",
     "restful-react": "^15.9.3",
     "rrule": "^2.6.4",
     "sass": "^1.49.7",
     "swiper": "^8.2.4",
-    "web-vitals": "^2.1.2"
+    "web-vitals": "^2.1.2",
+    "ws": "^8.16.0"
   },
   "scripts": {
     "start": "react-scripts start",
