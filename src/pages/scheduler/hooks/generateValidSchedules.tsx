@@ -88,6 +88,10 @@ export const generateValidSchedules = ({ reportValidSchedules, courses }: Genera
     const labs: FlattenedSection[] = [];
     const tutorials: FlattenedSection[] = [];
     for (const section of course.sections) {
+      if (section.meetingTimes.some((time) => time.time.includes('TBA'))) {
+        continue;
+      }
+
       const flattened: FlattenedSection = { ...section, course };
       switch (section.sectionCode[0]) {
         case 'A':
